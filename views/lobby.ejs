@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+  <%- include('partials/header.ejs') %>
+  <body>
+    <main>
+      <%- include('partials/navbar.ejs') %>
+
+      <h2><%= (!user) ? 'Lobby' : `Hey, ${user.username}` %></h2>
+
+      <div class="box-chat <%= (user?.role === 'admin') ? 'admin' : '' %>">
+        <ul>
+          <% messages.forEach(message => { %> <% if (!user) { %>
+          <li>
+            <p class="sender">anonymous</p>
+            <div class="message">
+              <div class="content">
+                <% if (message.type === 'mixed') { %>
+                <div class="mixed">
+                  <p><%- message.content %></p>
+                  <img src="<%= message.attachment %>" alt="" />
+                </div>
+                <% } else if (message.type === 'image') { %>
+                <img class="image" src="<%= message.content %>" alt="" />
+                <% } else { %>
+                <p class="text"><%- message.content %></p>
+                <% } %>
+              </div>
+            </div>
+          </li>
+          <% } else { %>
+          <li
+            class="<%= message.user.id.toString() == user.id.toString() ? 'user' : '' %>"
+          >
+            <p class="sender">
+              <% const date = new Date(message.createdAt); %> <% const
+              dateFormat = {month: 'long', day: 'numeric'}; %> <% if
+              (message.user.role === 'admin') { %>
+              <span class="material-symbols-outlined" style="font-size: 16px">
+                check_circle
+              </span>
+              <% } %> <%= message.user.username %> - <%=
+              date.toLocaleString('default', dateFormat) %>
+            </p>
+            <div class="message">
+              <div class="content">
+                <% if (message.type === 'mixed') { %>
+                <div class="mixed">
+                  <p><%- message.content %></p>
+                  <img src="<%= message.attachment %>" alt="" />
+                </div>
+                <% } else if (message.type === 'image') { %>
+                <img class="image" src="<%= message.content %>" alt="" />
+                <% } else { %>
+                <p class="text"><%- message.content %></p>
+                <% } %>
+              </div>
+              <button class="action delete-message" data-id="<%= message.id %>">
+                <span class="material-symbols-outlined"> delete </span>
+              </button>
+            </div>
+          </li>
+          <% } %> <% }) %>
+        </ul>
+      </div>
+
+      <% if (!user) { %>
+      <div class="input-hidden">Login to chat</div>
+      <% } else { %>
+      <div class="input-field">
+        <% if (typeof errors != 'undefined') { %> <% errors.forEach(error => {%>
+        <div class="validation-alert">
+          <p><%= error %></p>
+        </div>
+        <% }) %> <% } %>
+
+        <form action="message" enctype="multipart/form-data" method="post">
+          <div class="text-box">
+            <input
+              type="text"
+              name="message"
+              placeholder="Say something..."
+              autocomplete="off"
+            />
+            <label title="Choose photo" for="photo"
+              ><span class="material-symbols-outlined"> image </span></label
+            >
+            <div class="hidden upload-placeholder">
+              <img src="" alt="" />
+              <button type="button">
+                <span class="material-symbols-outlined"> close </span>
+              </button>
+            </div>
+          </div>
+          <input
+            id="photo"
+            type="file"
+            name="photo"
+            placeholder="choose photo"
+            accept="image/*"
+            aria-hidden="true"
+          />
+          <button id="send-message" type="submit">
+            <span class="material-symbols-outlined"> send </span>
+          </button>
+        </form>
+      </div>
+      <% } %>
+    </main>
+  </body>
+
+  <script>
+    const boxChat = document.querySelector('.box-chat');
+    boxChat.scrollTop = boxChat.scrollHeight;
+
+    const inputText = document.querySelector('input[type="text"]');
+    const inputFile = document.querySelector('input[type="file"]');
+    inputFile.value = '';
+    const buttonPhoto = document.querySelector('label[for="photo"]');
+
+    const uploadPlaceholder = document.querySelector('.upload-placeholder');
+    const preview = uploadPlaceholder.querySelector('img');
+    const removePreview = uploadPlaceholder.querySelector('button');
+
+    const deleteMessageBtns = document.querySelectorAll('.delete-message');
+
+    const sendMessageBtn = document.querySelector('#send-message');
+    sendMessageBtn.disabled = true;
+
+    inputFile.addEventListener('change', (e) => {
+      // show preview
+      const blob = URL.createObjectURL(e.currentTarget.files[0]);
+      preview.src = blob;
+      uploadPlaceholder.classList.remove('hidden');
+
+      // hide upload button
+      buttonPhoto.classList.add('hidden');
+      changeButtonReady();
+    });
+
+    removePreview.addEventListener('click', (e) => {
+      // hide preview
+      preview.src = '';
+      uploadPlaceholder.classList.add('hidden');
+
+      // show upload button
+      buttonPhoto.classList.remove('hidden');
+      inputFile.value = '';
+      changeButtonReady();
+    });
+
+    inputText.addEventListener('input', (e) => {
+      changeButtonReady();
+    });
+
+    const form = document.querySelector('form[action="message"]');
+
+    function checkFormReady() {
+      const inputs = [...form.querySelectorAll('input')];
+      const isReady = inputs.some((input) => input.value.trim() !== '');
+      return isReady;
+    }
+
+    function changeButtonReady() {
+      const isReady = checkFormReady();
+      if (isReady) sendMessageBtn.disabled = false;
+      else sendMessageBtn.disabled = true;
+    }
+
+    deleteMessageBtns.forEach((btn) => {
+      btn.addEventListener('click', async (e) => {
+        try {
+          if (confirm('Are you sure want to delete this message?')) {
+            const messageID = e.currentTarget.dataset.id;
+            // console.log(messageID);
+            const res = await fetch('/delete', {
+              method: 'post',
+              headers: {
+                'Content-type': 'application/json',
+              },
+              body: JSON.stringify({
+                id: messageID,
+              }),
+            });
+            if (res.ok) {
+              const data = await res.json();
+              alert(data.message);
+              if (data.redirect) location.href = data.redirect;
+            } else {
+              const data = await res.json();
+              alert(data.message);
+            }
+          }
+        } catch (err) {
+          console.log(err);
+        }
+      });
+    });
+  </script>
+</html>

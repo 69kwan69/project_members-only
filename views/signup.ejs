@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <%- include('partials/header.ejs') %>
+  </head>
+  <body>
+    <main>
+      <%- include('partials/navbar.ejs') %>
+
+      <h2>Signup</h2>
+
+      <% if (typeof errors != 'undefined') { %>
+      <div class="validation-alert">
+        <% errors.forEach(error => { %>
+        <p><%= error.msg %></p>
+        <% }) %>
+      </div>
+      <% } %>
+
+      <form class="authentication" action="" method="post">
+        <label for="username">Username:</label>
+        <input
+          id="username"
+          type="text"
+          name="username"
+          required
+          minlength="2"
+          title="username must be at least 2 characters"
+        />
+        <label for="password">Password:</label>
+        <input
+          type="password"
+          name="password"
+          id="password"
+          required
+          minlength="8"
+          title="password must be at least 8 characters"
+        />
+        <button type="submit">Create account</button>
+      </form>
+    </main>
+  </body>
+</html>

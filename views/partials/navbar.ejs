@@ -1,0 +1,19 @@
+<div class="navbar">
+  <h1>
+    <a href="/">OnlyFan</a>
+  </h1>
+  <ul>
+    <% if (!user) { %>
+    <li>
+      <a href="/login">Login</a>
+    </li>
+    <li>
+      <a href="/signup">Signup</a>
+    </li>
+    <% } else { %>
+    <li>
+      <a href="/logout">Logout</a>
+    </li>
+    <% } %>
+  </ul>
+</div>
