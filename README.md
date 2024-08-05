@@ -4,7 +4,7 @@ This project is an assignment by TheOdinProject. For more information, please re
 
 A small private room to chat! Join us, and you will get to meet new friends and possibly e-girl, too. This project is made with Express.js with Passport for authentication mechanism.
 
-[Chat now]()
+[Chat now](https://only-fan.adaptable.app/)
 
 ![](/screenshot.png)
 _I've been postponed this project for too long_ - me.
